@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS-7 — Neural Augmentation Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0C10;
+    --panel: #141920;
+    --panel-2: #1B222B;
+    --line: #262E38;
+    --mint: #7CE7D1;
+    --mint-dim: #4A8F82;
+    --red: #FF5D5D;
+    --chrome: #8B94A3;
+    --text: #E7EAF0;
+    --text-dim: #7C8493;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* subtle circuit grid backdrop */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  a { text-decoration: none; color: inherit; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Rajdhani', sans-serif; }
+
+  /* ===== Reticle cursor follower ===== */
+  #reticle {
+    position: fixed;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--mint);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease, width 0.2s ease, height 0.2s ease;
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+  #reticle::before, #reticle::after {
+    content: '';
+    position: absolute;
+    background: var(--mint);
+  }
+  #reticle::before { width: 1px; height: 8px; top: -12px; left: 50%; transform: translateX(-50%); }
+  #reticle::after { width: 8px; height: 1px; left: -12px; top: 50%; transform: translateY(-50%); }
+  @media (hover: hover) and (pointer: fine) {
+    #reticle { opacity: 0.7; }
+  }
+
+  /* ===== Nav ===== */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px clamp(20px, 5vw, 64px);
+    background: rgba(10, 12, 16, 0.75);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo .dot {
+    width: 8px; height: 8px;
+    background: var(--mint);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--mint);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+  }
+  .nav-links a:hover { color: var(--mint); }
+  .nav-links { display: none; }
+  @media (min-width: 800px) { .nav-links { display: flex; } }
+  .nav-cta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 10px 18px;
+    border: 1px solid var(--mint-dim);
+    color: var(--mint);
+    border-radius: 3px;
+    transition: all 0.25s ease;
+  }
+  .nav-cta:hover { background: var(--mint); color: var(--bg); box-shadow: 0 0 20px rgba(124,231,209,0.4); }
+
+  /* ===== Hero ===== */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px clamp(20px, 5vw, 64px) 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--mint);
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--mint);
+  }
+  h1.hero-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(48px, 9vw, 118px);
+    line-height: 0.95;
+    letter-spacing: -1px;
+    max-width: 900px;
+  }
+  h1.hero-title .accent { color: var(--mint); }
+  .hero-sub {
+    margin-top: 28px;
+    max-width: 560px;
+    font-size: clamp(16px, 2vw, 19px);
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+  .hero-actions {
+    margin-top: 44px;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-primary {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 16px 30px;
+    background: var(--mint);
+    color: var(--bg);
+    border-radius: 3px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-block;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,231,209,0.3); }
+  .btn-ghost {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2px;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--chrome); }
+
+  /* ===== Vitals signature strip ===== */
+  .vitals {
+    margin-top: 80px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .vitals-wave {
+    flex: 1 1 260px;
+    min-width: 220px;
+    height: 60px;
+    position: relative;
+  }
+  .vitals-wave svg { width: 100%; height: 100%; display: block; }
+  .vitals-wave path.pulse-line {
+    fill: none;
+    stroke: var(--mint);
+    stroke-width: 1.5;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    animation: draw-pulse 3.2s linear infinite;
+  }
+  @keyframes draw-pulse {
+    0% { stroke-dashoffset: 800; }
+    100% { stroke-dashoffset: -800; }
+  }
+  .vitals-readout {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+  }
+  .vitals-metric { font-family: 'JetBrains Mono', monospace; }
+  .vitals-metric .label { font-size: 10px; color: var(--text-dim); letter-spacing: 1.5px; display: block; }
+  .vitals-metric .value { font-size: 18px; color: var(--text); margin-top: 4px; }
+  .vitals-metric .value.mint { color: var(--mint); }
+  .vitals-metric .value.red { color: var(--red); }
+
+  /* ===== Section shared ===== */
+  section { position: relative; z-index: 1; padding: 110px clamp(20px, 5vw, 64px); max-width: 1400px; margin: 0 auto; }
+  .section-head { max-width: 640px; margin-bottom: 64px; }
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--mint);
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  h2.section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05;
+  }
+  .section-desc { margin-top: 18px; color: var(--text-dim); font-size: 16px; line-height: 1.7; }
+
+  /* ===== Augmentations grid ===== */
+  .aug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .aug-card {
+    background: var(--panel);
+    padding: 40px 32px;
+    transition: background 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .aug-card:hover { background: var(--panel-2); }
+  .aug-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 0;
+    background: var(--mint);
+    transition: height 0.35s ease;
+  }
+  .aug-card:hover::before { height: 100%; }
+  .aug-index { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--mint-dim); }
+  .aug-name { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 24px; margin: 18px 0 12px; }
+  .aug-desc { color: var(--text-dim); font-size: 14.5px; line-height: 1.6; }
+  .aug-spec {
+    margin-top: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--chrome);
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  /* ===== Integration protocol (numbered — real sequence) ===== */
+  .protocol { display: flex; flex-direction: column; }
+  .protocol-step {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 32px;
+    padding: 36px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: start;
+  }
+  .protocol-step:first-child { border-top: 1px solid var(--line); }
+  .protocol-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 44px;
+    color: var(--mint-dim);
+    line-height: 1;
+  }
+  .protocol-body h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  .protocol-body p { color: var(--text-dim); font-size: 15px; line-height: 1.6; max-width: 560px; }
+  .protocol-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--mint);
+    letter-spacing: 1px;
+    margin-top: 10px;
+    display: inline-block;
+  }
+
+  /* ===== Diagnostics / stats ===== */
+  .diag-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 56px clamp(24px, 4vw, 56px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 40px;
+  }
+  .diag-stat .num {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(36px, 4vw, 52px);
+    color: var(--mint);
+    line-height: 1;
+  }
+  .diag-stat .desc { margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim); letter-spacing: 0.5px; }
+
+  /* ===== CTA footer ===== */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 100px clamp(20px, 5vw, 64px) 50px;
+    border-top: 1px solid var(--line);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .footer-cta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 40px;
+    margin-bottom: 70px;
+  }
+  .footer-cta h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 56px);
+    max-width: 600px;
+    line-height: 1.05;
+  }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    padding-top: 30px;
+    border-top: 1px solid var(--line);
+  }
+
+  /* scroll reveal */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--mint);
+    outline-offset: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div id="reticle"></div>
+
+<nav>
+  <div class="logo"><span class="dot"></span>NEXUS-7</div>
+  <div class="nav-links">
+    <a href="#augmentations">Augmentations</a>
+    <a href="#protocol">Protocol</a>
+    <a href="#diagnostics">Diagnostics</a>
+  </div>
+  <a href="#cta" class="nav-cta">REQUEST SCAN</a>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow mono">SYSTEM STATUS · OPERATIONAL</div>
+  <h1 class="hero-title">Your body was<br>the <span class="accent">beta version.</span></h1>
+  <p class="hero-sub">NEXUS-7 designs certified neural and cybernetic augmentations that integrate with your nervous system in under 72 hours. Reflex, memory, and vision upgrades — installed, not imagined.</p>
+  <div class="hero-actions">
+    <a href="#cta" class="btn-primary">REQUEST COMPATIBILITY SCAN →</a>
+    <a href="#protocol" class="btn-ghost">See the integration protocol</a>
+  </div>
+
+  <div class="vitals reveal">
+    <div class="vitals-wave">
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none">
+        <path class="pulse-line" d="M0,30 L60,30 L75,10 L90,50 L105,30 L140,30 L155,15 L170,45 L185,30 L400,30" />
+      </svg>
+    </div>
+    <div class="vitals-readout">
+      <div class="vitals-metric"><span class="label">NEURAL SYNC</span><span class="value mint">98.4%</span></div>
+      <div class="vitals-metric"><span class="label">LATENCY</span><span class="value">3ms</span></div>
+      <div class="vitals-metric"><span class="label">REJECTION RISK</span><span class="value red">0.02%</span></div>
+      <div class="vitals-metric"><span class="label">UNITS ACTIVE</span><span class="value">14,208</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="augmentations">
+  <div class="section-head reveal">
+    <div class="section-tag mono">01 — CATALOG</div>
+    <h2 class="section-title">Augmentations, not accessories.</h2>
+    <p class="section-desc">Each unit is engineered around a single nervous-system function. No bundles, no bloat — you choose exactly what your body needs upgraded.</p>
+  </div>
+
+  <div class="aug-grid reveal">
+    <div class="aug-card">
+      <div class="aug-index mono">UNIT / OCU-3</div>
+      <h3 class="aug-name">Ocular Overlay</h3>
+      <p class="aug-desc">Retinal projection layer with adaptive low-light correction and real-time translation overlay.</p>
+      <div class="aug-spec"><span>POWER: 0.4W</span><span>SYNC: 12ms</span></div>
+    </div>
+    <div class="aug-card">
+      <div class="aug-index mono">UNIT / CTX-9</div>
+      <h3 class="aug-name">Cortex Buffer</h3>
+      <p class="aug-desc">Short-term memory expansion module. Recall any conversation from the past 30 days on command.</p>
+      <div class="aug-spec"><span>POWER: 0.7W</span><span>SYNC: 4ms</span></div>
+    </div>
+    <div class="aug-card">
+      <div class="aug-index mono">UNIT / RFX-5</div>
+      <h3 class="aug-name">Reflex Accelerator</h3>
+      <p class="aug-desc">Spinal signal booster that shortens reaction time by up to 40% under controlled load.</p>
+      <div class="aug-spec"><span>POWER: 1.1W</span><span>SYNC: 1ms</span></div>
+    </div>
+    <div class="aug-card">
+      <div class="aug-index mono">UNIT / DRM-2</div>
+      <h3 class="aug-name">Dermal Mesh</h3>
+      <p class="aug-desc">Subcutaneous plating that self-reports vitals and micro-injuries to your care team in real time.</p>
+      <div class="aug-spec"><span>POWER: 0.2W</span><span>SYNC: 8ms</span></div>
+    </div>
+    <div class="aug-card">
+      <div class="aug-index mono">UNIT / AUD-4</div>
+      <h3 class="aug-name">Auditory Filter</h3>
+      <p class="aug-desc">Selective frequency dampening — mute what you choose, hear everything else at full clarity.</p>
+      <div class="aug-spec"><span>POWER: 0.3W</span><span>SYNC: 6ms</span></div>
+    </div>
+    <div class="aug-card">
+      <div class="aug-index mono">UNIT / GRP-1</div>
+      <h3 class="aug-name">Grip Calibrator</h3>
+      <p class="aug-desc">Forearm actuator array that fine-tunes hand pressure for surgeons, musicians, and machinists.</p>
+      <div class="aug-spec"><span>POWER: 0.5W</span><span>SYNC: 3ms</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="protocol">
+  <div class="section-head reveal">
+    <div class="section-tag mono">02 — INTEGRATION PROTOCOL</div>
+    <h2 class="section-title">Four stages. Seventy-two hours.</h2>
+    <p class="section-desc">Every augmentation follows the same certified sequence — this is a real install order, not a marketing timeline.</p>
+  </div>
+
+  <div class="protocol reveal">
+    <div class="protocol-step">
+      <div class="protocol-num mono">01</div>
+      <div class="protocol-body">
+        <h3>Compatibility Scan</h3>
+        <p>Full nervous-system mapping to confirm your body can host the requested unit without signal conflicts.</p>
+        <span class="protocol-status mono">◆ AVG. DURATION: 40 MIN</span>
+      </div>
+    </div>
+    <div class="protocol-step">
+      <div class="protocol-num mono">02</div>
+      <div class="protocol-body">
+        <h3>Neural Calibration</h3>
+        <p>Your baseline signal patterns are recorded so the augmentation can adapt to you, not the reverse.</p>
+        <span class="protocol-status mono">◆ AVG. DURATION: 3 HRS</span>
+      </div>
+    </div>
+    <div class="protocol-step">
+      <div class="protocol-num mono">03</div>
+      <div class="protocol-body">
+        <h3>Surgical Integration</h3>
+        <p>Certified installation under local sync anesthesia. Most units require no overnight stay.</p>
+        <span class="protocol-status mono">◆ AVG. DURATION: 5 HRS</span>
+      </div>
+    </div>
+    <div class="protocol-step">
+      <div class="protocol-num mono">04</div>
+      <div class="protocol-body">
+        <h3>Adaptive Monitoring</h3>
+        <p>72-hour remote vitals tracking while your nervous system finishes adjusting to the new signal load.</p>
+        <span class="protocol-status mono">◆ AVG. DURATION: 72 HRS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="diagnostics">
+  <div class="section-head reveal">
+    <div class="section-tag mono">03 — DIAGNOSTICS</div>
+    <h2 class="section-title">The numbers we're held to.</h2>
+  </div>
+  <div class="diag-panel reveal">
+    <div class="diag-stat">
+      <div class="num">14,208</div>
+      <div class="desc mono">UNITS CURRENTLY ACTIVE</div>
+    </div>
+    <div class="diag-stat">
+      <div class="num">99.98%</div>
+      <div class="desc mono">INTEGRATION SUCCESS RATE</div>
+    </div>
+    <div class="diag-stat">
+      <div class="num">72 HRS</div>
+      <div class="desc mono">AVG. FULL ADAPTATION TIME</div>
+    </div>
+    <div class="diag-stat">
+      <div class="num">0.02%</div>
+      <div class="desc mono">SIGNAL REJECTION RATE</div>
+    </div>
+  </div>
+</section>
+
+<footer id="cta">
+  <div class="footer-cta reveal">
+    <h2>Ready to find out<br>what you're missing?</h2>
+    <a href="#" class="btn-primary">REQUEST COMPATIBILITY SCAN →</a>
+  </div>
+  <div class="footer-bottom">
+    <span>NEXUS-7 © 2026 — NEURAL AUGMENTATION PLATFORM</span>
+    <span>SYSTEM STATUS: ALL UNITS OPERATIONAL</span>
+  </div>
+</footer>
+
+<script>
+  // Reticle follows cursor
+  const reticle = document.getElementById('reticle');
+  window.addEventListener('mousemove', (e) => {
+    reticle.style.left = e.clientX + 'px';
+    reticle.style.top = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, .aug-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      reticle.style.width = '54px';
+      reticle.style.height = '54px';
+    });
+    el.addEventListener('mouseleave', () => {
+      reticle.style.width = '36px';
+      reticle.style.height = '36px';
+    });
+  });
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
